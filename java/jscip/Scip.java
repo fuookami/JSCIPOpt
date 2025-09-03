@@ -196,6 +196,18 @@ public class Scip
       CHECK_RETCODE( SCIPJNI.SCIPsetStringParam(_scipptr, name, value) );
    }
 
+   /** wraps SCIPsetPresolving() */
+   public void setPresolving(SCIP_ParamSetting paramSetting, boolean quite)
+   {
+       CHECK_RETCODE( SCIPJNI.SCIPsetPresolving(_scipptr, paramSetting, quite ? 1 : 0) );
+   }
+
+   /** wraps SCIPsetHeuristics() */
+   public void setHeuristics(SCIP_ParamSetting paramSetting, boolean quite)
+   {
+       CHECK_RETCODE( SCIPJNI.SCIPsetHeuristics(_scipptr, paramSetting, quite ? 1 : 0) );
+   }
+
    /** wraps SCIPsetEmphasis() */
    public void setEmphasis(SCIP_ParamEmphasis paramEmphasis, boolean quite)
    {
@@ -1490,6 +1502,30 @@ public class Scip
    {
       assert(sol != null && sol.getPtr() != null);
       return SCIPJNI.SCIPgetSolOrigObj(_scipptr, sol.getPtr());
+   }
+
+   /** wraps SCIPconsGetDualsol() */
+   public double getDual(Constraint cons)
+   {
+       SWIGTYPE_p_double value = SCIPJNI.new_double_array(1);
+       SWIGTYPE_p_unsigned_int bounded = SCIPJNI.new_unsigned_int_array(1);
+       CHECK_RETCODE( SCIPJNI.SCIPgetDualSolVal(_scipptr, cons.getPtr(), value, bounded) );
+       double ret = SCIPJNI.double_array_getitem(value, 0);
+       SCIPJNI.delete_double_array(value);
+       SCIPJNI.delete_unsigned_int_array(bounded);
+       return ret;
+   }
+
+    /** wraps SCIPgetDualsolLinear() */
+   public double getDualLinear(Constraint cons)
+   {
+       return SCIPJNI.SCIPgetDualsolLinear(_scipptr, cons.getPtr());
+   }
+
+    /** wraps SCIPgetDualfarkasLinear() */
+   public double getDualFarkasLinear(Constraint cons)
+   {
+        return SCIPJNI.SCIPgetDualfarkasLinear(_scipptr, cons.getPtr());
    }
 
    /** wraps SCIPinfinity() */

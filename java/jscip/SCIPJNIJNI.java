@@ -85,6 +85,10 @@ public class SCIPJNIJNI {
   public final static native int SCIP_ORBITOPETYPE_FULL_get();
   public final static native int SCIP_ORBITOPETYPE_PARTITIONING_get();
   public final static native int SCIP_ORBITOPETYPE_PACKING_get();
+  public final static native int SCIP_PARAMSETTING_DEFAULT_get();
+  public final static native int SCIP_PARAMSETTING_AGGRESSIVE_get();
+  public final static native int SCIP_PARAMSETTING_FAST_get();
+  public final static native int SCIP_PARAMSETTING_OFF_get();
   public final static native int SCIP_PARAMEMPHASIS_DEFAULT_get();
   public final static native int SCIP_PARAMEMPHASIS_CPSOLVER_get();
   public final static native int SCIP_PARAMEMPHASIS_EASYCIP_get();
@@ -176,6 +180,8 @@ public class SCIPJNIJNI {
   public final static native int SCIPsetRealParam(long jarg1, String jarg2, double jarg3);
   public final static native int SCIPsetCharParam(long jarg1, String jarg2, char jarg3);
   public final static native int SCIPsetStringParam(long jarg1, String jarg2, String jarg3);
+  public final static native int SCIPsetPresolving(long jarg1, int jarg2, long jarg3);
+  public final static native int SCIPsetHeuristics(long jarg1, int jarg2, long jarg3);
   public final static native int SCIPsetEmphasis(long jarg1, int jarg2, long jarg3);
   public final static native int SCIPsetObjsense(long jarg1, int jarg2);
   public final static native int SCIPgetObjsense(long jarg1);
@@ -203,6 +209,9 @@ public class SCIPJNIJNI {
   public final static native int SCIPsolGetDepth(long jarg1);
   public final static native int SCIPsolGetIndex(long jarg1);
   public final static native String SCIPconsGetName(long jarg1);
+  public final static native int SCIPgetDualSolVal(long jarg1, long jarg2, long jarg3, long jarg4);
+  public final static native double SCIPgetDualsolLinear(long jarg1, long jarg2);
+  public final static native double SCIPgetDualfarkasLinear(long jarg1, long jarg2);
   public final static native long ObjMessagehdlr_scip_bufferedoutput__get(long jarg1, ObjMessagehdlr jarg1_);
   public final static native long new_ObjMessagehdlr(long jarg1);
   public final static native void delete_ObjMessagehdlr(long jarg1);

@@ -27,6 +27,7 @@ set(SWIG_JAVA_SOURCES
   ${PROJECT_SOURCE_DIR}/java/jscip/SCIP_Retcode.java
   ${PROJECT_SOURCE_DIR}/java/jscip/SCIP_Vartype.java
   ${PROJECT_SOURCE_DIR}/java/jscip/SCIP_BoundType.java
+  ${PROJECT_SOURCE_DIR}/java/jscip/SCIP_ParamSetting.java
   ${PROJECT_SOURCE_DIR}/java/jscip/SCIP_ParamEmphasis.java
   ${PROJECT_SOURCE_DIR}/java/jscip/SCIP_Objsense.java
   ${PROJECT_SOURCE_DIR}/java/jscip/SCIP_OrbitopeType.java

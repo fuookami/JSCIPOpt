@@ -611,6 +611,16 @@ enum SCIP_OrbitopeType
 };
 typedef enum SCIP_OrbitopeType SCIP_ORBITOPETYPE;
 
+/* SCIP ParamSetting enum */
+enum SCIP_ParamSetting
+{
+  SCIP_PARAMSETTING_DEFAULT     = 0,        /**< use default values */
+  SCIP_PARAMSETTING_AGGRESSIVE  = 1,        /**< set to aggressive settings */
+  SCIP_PARAMSETTING_FAST        = 2,        /**< set to fast settings */
+  SCIP_PARAMSETTING_OFF         = 3         /**< turn off */
+};
+typedef enum SCIP_ParamSetting SCIP_PARAMSETTING;
+
 /* SCIP ParamEmphasis enum */
 enum SCIP_ParamEmphasis 
 { 
@@ -692,7 +702,7 @@ typedef enum SCIP_Stage SCIP_STAGE;
 /* from pub_misc.h */
 SCIP_Real      SCIPcalcMachineEpsilon();
 
-/* from scip.h*/
+/* from scip.h */
 SCIP_RETCODE   SCIPcreate(SCIP** scip);
 SCIP_RETCODE   SCIPreadProb(SCIP* scip, const char* filename, const char* extension);
 SCIP_RETCODE   SCIPreadParams(SCIP* scip, const char* filename);
@@ -738,6 +748,8 @@ SCIP_RETCODE   SCIPsetLongintParam(SCIP* scip, const char* name, SCIP_Longint va
 SCIP_RETCODE   SCIPsetRealParam(SCIP* scip, const char* name, SCIP_Real value);
 SCIP_RETCODE   SCIPsetCharParam(SCIP* scip, const char* name, char value);
 SCIP_RETCODE   SCIPsetStringParam(SCIP* scip, const char* name, const char* value);
+SCIP_RETCODE   SCIPsetPresolving(SCIP* scip, SCIP_PARAMSETTING paramsetting, SCIP_Bool quiet);
+SCIP_RETCODE   SCIPsetHeuristics(SCIP* scip, SCIP_PARAMSETTING paramsetting, SCIP_Bool quiet);
 SCIP_RETCODE   SCIPsetEmphasis(SCIP* scip, SCIP_PARAMEMPHASIS paramemphasis, SCIP_Bool quiet);
 SCIP_RETCODE   SCIPsetObjsense(SCIP* scip, SCIP_OBJSENSE objsense);
 SCIP_OBJSENSE  SCIPgetObjsense(SCIP* scip);
@@ -781,6 +793,9 @@ int            SCIPsolGetIndex(SCIP_SOL* sol);
 
 /* from pub_cons.h */
 const char*    SCIPconsGetName(SCIP_CONS* cons);
+SCIP_RETCODE   SCIPgetDualSolVal(SCIP* scip, SCIP_CONS* cons, SCIP_Real* dualsolval, SCIP_Bool* boundconstraint);
+SCIP_Real      SCIPgetDualsolLinear(SCIP* scip, SCIP_CONS* cons);
+SCIP_Real      SCIPgetDualfarkasLinear(SCIP* scip, SCIP_CONS* cons);
 
 /* from type_message.h */
 typedef struct SCIP_Messagehdlr SCIP_MESSAGEHDLR;

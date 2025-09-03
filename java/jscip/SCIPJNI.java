@@ -394,6 +394,14 @@ public class SCIPJNI {
     return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPsetStringParam(SWIGTYPE_p_SCIP.getCPtr(scip), name, value));
   }
 
+  public static SCIP_Retcode SCIPsetPresolving(SWIGTYPE_p_SCIP scip, SCIP_ParamSetting paramsetting, long quiet) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPsetPresolving(SWIGTYPE_p_SCIP.getCPtr(scip), paramsetting.swigValue(), quiet));
+  }
+
+  public static SCIP_Retcode SCIPsetHeuristics(SWIGTYPE_p_SCIP scip, SCIP_ParamSetting paramsetting, long quiet) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPsetHeuristics(SWIGTYPE_p_SCIP.getCPtr(scip), paramsetting.swigValue(), quiet));
+  }
+
   public static SCIP_Retcode SCIPsetEmphasis(SWIGTYPE_p_SCIP scip, SCIP_ParamEmphasis paramemphasis, long quiet) {
     return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPsetEmphasis(SWIGTYPE_p_SCIP.getCPtr(scip), paramemphasis.swigValue(), quiet));
   }
@@ -500,6 +508,18 @@ public class SCIPJNI {
 
   public static String SCIPconsGetName(SWIGTYPE_p_SCIP_CONS cons) {
     return SCIPJNIJNI.SCIPconsGetName(SWIGTYPE_p_SCIP_CONS.getCPtr(cons));
+  }
+
+  public static SCIP_Retcode SCIPgetDualSolVal(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_CONS cons, SWIGTYPE_p_double dualsolval, SWIGTYPE_p_unsigned_int boundconstraint) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPgetDualSolVal(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_CONS.getCPtr(cons), SWIGTYPE_p_double.getCPtr(dualsolval), SWIGTYPE_p_unsigned_int.getCPtr(boundconstraint)));
+  }
+
+  public static double SCIPgetDualsolLinear(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_CONS cons) {
+    return SCIPJNIJNI.SCIPgetDualsolLinear(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_CONS.getCPtr(cons));
+  }
+
+  public static double SCIPgetDualfarkasLinear(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_CONS cons) {
+    return SCIPJNIJNI.SCIPgetDualfarkasLinear(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_CONS.getCPtr(cons));
   }
 
   public static ObjMessagehdlr SCIPgetObjMessagehdlr(SWIGTYPE_p_SCIP_Messagehdlr messagehdlr) {
