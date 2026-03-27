@@ -1,9 +1,12 @@
 package jscip;
 
+import java.util.ArrayList;
+
 /** Class representing a single SCIP instance (equivalent of SCIP).*/
 public class Scip
 {
    private SWIGTYPE_p_SCIP _scipptr; /** pointer address class created by SWIG */
+   private final ArrayList<EventHandler> _eventhandlers; /** keep Java event handlers alive while SCIP owns the director */
 
    /* helper function to check a SCIP retcode */
    private static void CHECK_RETCODE(SCIP_Retcode retcode)
@@ -15,6 +18,13 @@ public class Scip
    public Scip()
    {
       _scipptr = null;
+      _eventhandlers = new ArrayList<>();
+   }
+
+   /** returns SWIG object type representing a SCIP pointer */
+   public SWIGTYPE_p_SCIP getPtr()
+   {
+      return _scipptr;
    }
 
    /** creates the C data for a SCIP; it also creates the problem and incudes all default plug-ins */
@@ -31,6 +41,8 @@ public class Scip
    {
       assert(_scipptr != null);
       SCIPJNI.freeSCIP(_scipptr);
+      _eventhandlers.clear();
+      _scipptr = null;
    }
 
    /** wraps SCIPsolve() */
@@ -1662,6 +1674,191 @@ public class Scip
    public double getGap()
    {
       return SCIPJNI.SCIPgetGap(_scipptr);
+   }
+
+   /** includes a Java event handler backed by SCIP's ObjEventhdlr director */
+   public void includeEventHandler(String name, String desc, final EventHandler handler) {
+      assert(_scipptr != null);
+      assert(handler != null);
+
+      final Scip scip = this;
+      final long[] autocatchEventtype = new long[] { EventMask.DISABLED };
+      final boolean[] autocatchRegistered = new boolean[] { false };
+      ObjEventhdlr objeventhdlr = new ObjEventhdlr(_scipptr, name, desc) {
+         @Override
+         public SCIP_Retcode scip_free(SWIGTYPE_p_SCIP scipptr, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr) {
+            EventHandlerRef ref = new EventHandlerRef(eventhdlr);
+
+            try {
+               handler.free(scip, ref);
+               handler.close();
+               return SCIP_Retcode.SCIP_OKAY;
+            } catch (Exception e) {
+               e.printStackTrace();
+               return SCIP_Retcode.SCIP_ERROR;
+            } finally {
+               autocatchEventtype[0] = EventMask.DISABLED;
+               autocatchRegistered[0] = false;
+               handler.detach();
+               _eventhandlers.remove(handler);
+            }
+         }
+
+         @Override
+         public SCIP_Retcode scip_init(SWIGTYPE_p_SCIP scipptr, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr) {
+            try {
+               long eventtype = handler.getType();
+               EventHandlerRef ref = new EventHandlerRef(eventhdlr);
+
+               autocatchEventtype[0] = eventtype;
+               autocatchRegistered[0] = false;
+               if (eventtype != EventMask.DISABLED) {
+                  SCIP_Retcode retcode = SCIPJNI.SCIPcatchEvent(scipptr, eventtype, eventhdlr, null, null);
+                  if (retcode != SCIP_Retcode.SCIP_OKAY) {
+                     return retcode;
+                  }
+                  autocatchRegistered[0] = true;
+               }
+
+               handler.init(scip, ref);
+               return SCIP_Retcode.SCIP_OKAY;
+            } catch (RuntimeException e) {
+               e.printStackTrace();
+               return SCIP_Retcode.SCIP_ERROR;
+            }
+         }
+
+         @Override
+         public SCIP_Retcode scip_exit(SWIGTYPE_p_SCIP scipptr, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr) {
+            try {
+               EventHandlerRef ref = new EventHandlerRef(eventhdlr);
+
+               handler.exit(scip, ref);
+
+               if (autocatchRegistered[0] && autocatchEventtype[0] != EventMask.DISABLED) {
+                  SCIP_Retcode retcode = SCIPJNI.SCIPdropEvent(scipptr, autocatchEventtype[0], eventhdlr, null, -1);
+                  if (retcode != SCIP_Retcode.SCIP_OKAY) {
+                     return retcode;
+                  }
+                  autocatchRegistered[0] = false;
+               }
+
+               return SCIP_Retcode.SCIP_OKAY;
+            } catch (RuntimeException e) {
+               e.printStackTrace();
+               return SCIP_Retcode.SCIP_ERROR;
+            }
+         }
+
+         @Override
+         public SCIP_Retcode scip_initsol(SWIGTYPE_p_SCIP scipptr, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr) {
+            try {
+               handler.initsol(scip, new EventHandlerRef(eventhdlr));
+               return SCIP_Retcode.SCIP_OKAY;
+            } catch (RuntimeException e) {
+               e.printStackTrace();
+               return SCIP_Retcode.SCIP_ERROR;
+            }
+         }
+
+         @Override
+         public SCIP_Retcode scip_exitsol(SWIGTYPE_p_SCIP scipptr, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr) {
+            try {
+               handler.exitsol(scip, new EventHandlerRef(eventhdlr));
+               return SCIP_Retcode.SCIP_OKAY;
+            } catch (RuntimeException e) {
+               e.printStackTrace();
+               return SCIP_Retcode.SCIP_ERROR;
+            }
+         }
+
+         @Override
+         public SCIP_Retcode scip_delete(SWIGTYPE_p_SCIP scipptr, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_p_SCIP_EventData eventdata) {
+            try {
+               handler.delete(scip, new EventHandlerRef(eventhdlr));
+               return SCIP_Retcode.SCIP_OKAY;
+            } catch (RuntimeException e) {
+               e.printStackTrace();
+               return SCIP_Retcode.SCIP_ERROR;
+            }
+         }
+
+         @Override
+         public SCIP_Retcode scip_exec(SWIGTYPE_p_SCIP scipptr, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_SCIP_Event event, SWIGTYPE_p_SCIP_EventData eventdata) {
+            try {
+               handler.execute(scip, new EventHandlerRef(eventhdlr), new Event(event));
+               return SCIP_Retcode.SCIP_OKAY;
+            } catch (RuntimeException e) {
+               e.printStackTrace();
+               return SCIP_Retcode.SCIP_ERROR;
+            }
+         }
+      };
+
+      objeventhdlr.swigReleaseOwnership();
+      CHECK_RETCODE( SCIPJNI.SCIPincludeObjEventhdlr(_scipptr, objeventhdlr, 1) );
+      SWIGTYPE_p_SCIP_Eventhdlr eventhdlrptr = SCIPJNI.SCIPfindEventhdlr(_scipptr, name);
+      assert(eventhdlrptr != null);
+      handler.attach(objeventhdlr, eventhdlrptr);
+      _eventhandlers.add(handler);
+   }
+
+   /** wraps SCIPfindEventhdlr() */
+   public EventHandlerRef findEventHandler(String name) {
+      SWIGTYPE_p_SCIP_Eventhdlr ptr = SCIPJNI.SCIPfindEventhdlr(_scipptr, name);
+      return (ptr == null) ? null : new EventHandlerRef(ptr);
+   }
+
+   /** wraps SCIPcatchEvent() and returns the filter position */
+   public int catchEvent(long eventtype, EventHandler handler) {
+      assert(handler != null && handler.getRef() != null);
+      SWIGTYPE_p_int filterpos = SCIPJNI.new_int_array(1);
+      CHECK_RETCODE( SCIPJNI.SCIPcatchEvent(_scipptr, eventtype, EventHandler.getPtr(handler), null, filterpos) );
+      int pos = SCIPJNI.int_array_getitem(filterpos, 0);
+      SCIPJNI.delete_int_array(filterpos);
+      return pos;
+   }
+
+   /** wraps SCIPdropEvent() */
+   public void dropEvent(long eventtype, EventHandler handler, int filterpos) {
+      assert(handler != null && handler.getRef() != null);
+      CHECK_RETCODE( SCIPJNI.SCIPdropEvent(_scipptr, eventtype, EventHandler.getPtr(handler), null, filterpos) );
+   }
+
+   /** wraps SCIPcatchVarEvent() and returns the filter position */
+   public int catchVarEvent(Variable var, long eventtype, EventHandler handler) {
+      assert(var != null && var.getPtr() != null);
+      assert(handler != null && handler.getRef() != null);
+      SWIGTYPE_p_int filterpos = SCIPJNI.new_int_array(1);
+      CHECK_RETCODE( SCIPJNI.SCIPcatchVarEvent(_scipptr, var.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
+      int pos = SCIPJNI.int_array_getitem(filterpos, 0);
+      SCIPJNI.delete_int_array(filterpos);
+      return pos;
+   }
+
+   /** wraps SCIPdropVarEvent() */
+   public void dropVarEvent(Variable var, long eventtype, EventHandler handler, int filterpos) {
+      assert(var != null && var.getPtr() != null);
+      assert(handler != null && handler.getRef() != null);
+      CHECK_RETCODE( SCIPJNI.SCIPdropVarEvent(_scipptr, var.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
+   }
+
+   /** wraps SCIPcatchRowEvent() and returns the filter position */
+   public int catchRowEvent(Row row, long eventtype, EventHandler handler) {
+      assert(row != null && row.getPtr() != null);
+      assert(handler != null && handler.getRef() != null);
+      SWIGTYPE_p_int filterpos = SCIPJNI.new_int_array(1);
+      CHECK_RETCODE( SCIPJNI.SCIPcatchRowEvent(_scipptr, row.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
+      int pos = SCIPJNI.int_array_getitem(filterpos, 0);
+      SCIPJNI.delete_int_array(filterpos);
+      return pos;
+   }
+
+   /** wraps SCIPdropRowEvent() */
+   public void dropRowEvent(Row row, long eventtype, EventHandler handler, int filterpos) {
+      assert(row != null && row.getPtr() != null);
+      assert(handler != null && handler.getRef() != null);
+      CHECK_RETCODE( SCIPJNI.SCIPdropRowEvent(_scipptr, row.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
    }
 
    /** wraps SCIPsetStaticErrorPrintingMessagehdlr() */

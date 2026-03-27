@@ -522,6 +522,20 @@ public class SCIPJNI {
     return SCIPJNIJNI.SCIPgetDualfarkasLinear(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_CONS.getCPtr(cons));
   }
 
+  public static SCIP_Retcode SCIPincludeObjEventhdlr(SWIGTYPE_p_SCIP scip, ObjEventhdlr objeventhdlr, long deleteobject) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPincludeObjEventhdlr(SWIGTYPE_p_SCIP.getCPtr(scip), ObjEventhdlr.getCPtr(objeventhdlr), objeventhdlr, deleteobject));
+  }
+
+  public static ObjEventhdlr SCIPfindObjEventhdlr(SWIGTYPE_p_SCIP scip, String name) {
+    long cPtr = SCIPJNIJNI.SCIPfindObjEventhdlr(SWIGTYPE_p_SCIP.getCPtr(scip), name);
+    return (cPtr == 0) ? null : new ObjEventhdlr(cPtr, false);
+  }
+
+  public static ObjEventhdlr SCIPgetObjEventhdlr(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr) {
+    long cPtr = SCIPJNIJNI.SCIPgetObjEventhdlr(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr));
+    return (cPtr == 0) ? null : new ObjEventhdlr(cPtr, false);
+  }
+
   public static ObjMessagehdlr SCIPgetObjMessagehdlr(SWIGTYPE_p_SCIP_Messagehdlr messagehdlr) {
     long cPtr = SCIPJNIJNI.SCIPgetObjMessagehdlr(SWIGTYPE_p_SCIP_Messagehdlr.getCPtr(messagehdlr));
     return (cPtr == 0) ? null : new ObjMessagehdlr(cPtr, false);
@@ -546,6 +560,128 @@ public class SCIPJNI {
 
   public static SCIP_VerbLevel SCIPgetVerbLevel(SWIGTYPE_p_SCIP scip) {
     return SCIP_VerbLevel.swigToEnum(SCIPJNIJNI.SCIPgetVerbLevel(SWIGTYPE_p_SCIP.getCPtr(scip)));
+  }
+
+  public static SWIGTYPE_p_SCIP_Eventhdlr SCIPfindEventhdlr(SWIGTYPE_p_SCIP scip, String name) {
+    long cPtr = SCIPJNIJNI.SCIPfindEventhdlr(SWIGTYPE_p_SCIP.getCPtr(scip), name);
+    return (cPtr == 0) ? null : new SWIGTYPE_p_SCIP_Eventhdlr(cPtr, false);
+  }
+
+  public static SCIP_Retcode SCIPcatchEvent(SWIGTYPE_p_SCIP scip, long eventtype, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_SCIP_EventData eventdata, SWIGTYPE_p_int filterpos) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPcatchEvent(SWIGTYPE_p_SCIP.getCPtr(scip), eventtype, SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr), SWIGTYPE_p_SCIP_EventData.getCPtr(eventdata), SWIGTYPE_p_int.getCPtr(filterpos)));
+  }
+
+  public static SCIP_Retcode SCIPdropEvent(SWIGTYPE_p_SCIP scip, long eventtype, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_SCIP_EventData eventdata, int filterpos) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPdropEvent(SWIGTYPE_p_SCIP.getCPtr(scip), eventtype, SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr), SWIGTYPE_p_SCIP_EventData.getCPtr(eventdata), filterpos));
+  }
+
+  public static SCIP_Retcode SCIPcatchVarEvent(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_VAR var, long eventtype, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_SCIP_EventData eventdata, SWIGTYPE_p_int filterpos) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPcatchVarEvent(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_VAR.getCPtr(var), eventtype, SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr), SWIGTYPE_p_SCIP_EventData.getCPtr(eventdata), SWIGTYPE_p_int.getCPtr(filterpos)));
+  }
+
+  public static SCIP_Retcode SCIPdropVarEvent(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_VAR var, long eventtype, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_SCIP_EventData eventdata, int filterpos) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPdropVarEvent(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_VAR.getCPtr(var), eventtype, SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr), SWIGTYPE_p_SCIP_EventData.getCPtr(eventdata), filterpos));
+  }
+
+  public static SCIP_Retcode SCIPcatchRowEvent(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_Row row, long eventtype, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_SCIP_EventData eventdata, SWIGTYPE_p_int filterpos) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPcatchRowEvent(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_Row.getCPtr(row), eventtype, SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr), SWIGTYPE_p_SCIP_EventData.getCPtr(eventdata), SWIGTYPE_p_int.getCPtr(filterpos)));
+  }
+
+  public static SCIP_Retcode SCIPdropRowEvent(SWIGTYPE_p_SCIP scip, SWIGTYPE_p_SCIP_Row row, long eventtype, SWIGTYPE_p_SCIP_Eventhdlr eventhdlr, SWIGTYPE_p_SCIP_EventData eventdata, int filterpos) {
+    return SCIP_Retcode.swigToEnum(SCIPJNIJNI.SCIPdropRowEvent(SWIGTYPE_p_SCIP.getCPtr(scip), SWIGTYPE_p_SCIP_Row.getCPtr(row), eventtype, SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr), SWIGTYPE_p_SCIP_EventData.getCPtr(eventdata), filterpos));
+  }
+
+  public static String SCIPeventhdlrGetName(SWIGTYPE_p_SCIP_Eventhdlr eventhdlr) {
+    return SCIPJNIJNI.SCIPeventhdlrGetName(SWIGTYPE_p_SCIP_Eventhdlr.getCPtr(eventhdlr));
+  }
+
+  public static long SCIPeventGetType(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetType(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static SWIGTYPE_p_SCIP_VAR SCIPeventGetVar(SWIGTYPE_p_SCIP_Event event) {
+    long cPtr = SCIPJNIJNI.SCIPeventGetVar(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+    return (cPtr == 0) ? null : new SWIGTYPE_p_SCIP_VAR(cPtr, false);
+  }
+
+  public static double SCIPeventGetOldobj(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetOldobj(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetNewobj(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetNewobj(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetOldbound(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetOldbound(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetNewbound(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetNewbound(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static SCIP_Vartype SCIPeventGetOldtype(SWIGTYPE_p_SCIP_Event event) {
+    return SCIP_Vartype.swigToEnum(SCIPJNIJNI.SCIPeventGetOldtype(SWIGTYPE_p_SCIP_Event.getCPtr(event)));
+  }
+
+  public static SCIP_Vartype SCIPeventGetNewtype(SWIGTYPE_p_SCIP_Event event) {
+    return SCIP_Vartype.swigToEnum(SCIPJNIJNI.SCIPeventGetNewtype(SWIGTYPE_p_SCIP_Event.getCPtr(event)));
+  }
+
+  public static SWIGTYPE_p_SCIP_Node SCIPeventGetNode(SWIGTYPE_p_SCIP_Event event) {
+    long cPtr = SCIPJNIJNI.SCIPeventGetNode(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+    return (cPtr == 0) ? null : new SWIGTYPE_p_SCIP_Node(cPtr, false);
+  }
+
+  public static SWIGTYPE_p_SCIP_SOL SCIPeventGetSol(SWIGTYPE_p_SCIP_Event event) {
+    long cPtr = SCIPJNIJNI.SCIPeventGetSol(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+    return (cPtr == 0) ? null : new SWIGTYPE_p_SCIP_SOL(cPtr, false);
+  }
+
+  public static double SCIPeventGetHoleLeft(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetHoleLeft(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetHoleRight(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetHoleRight(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static SWIGTYPE_p_SCIP_Row SCIPeventGetRow(SWIGTYPE_p_SCIP_Event event) {
+    long cPtr = SCIPJNIJNI.SCIPeventGetRow(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+    return (cPtr == 0) ? null : new SWIGTYPE_p_SCIP_Row(cPtr, false);
+  }
+
+  public static SWIGTYPE_p_SCIP_Col SCIPeventGetRowCol(SWIGTYPE_p_SCIP_Event event) {
+    long cPtr = SCIPJNIJNI.SCIPeventGetRowCol(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+    return (cPtr == 0) ? null : new SWIGTYPE_p_SCIP_Col(cPtr, false);
+  }
+
+  public static double SCIPeventGetRowOldCoefVal(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetRowOldCoefVal(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetRowNewCoefVal(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetRowNewCoefVal(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetRowOldConstVal(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetRowOldConstVal(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetRowNewConstVal(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetRowNewConstVal(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static SCIP_SideType SCIPeventGetRowSide(SWIGTYPE_p_SCIP_Event event) {
+    return SCIP_SideType.swigToEnum(SCIPJNIJNI.SCIPeventGetRowSide(SWIGTYPE_p_SCIP_Event.getCPtr(event)));
+  }
+
+  public static double SCIPeventGetRowOldSideVal(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetRowOldSideVal(SWIGTYPE_p_SCIP_Event.getCPtr(event));
+  }
+
+  public static double SCIPeventGetRowNewSideVal(SWIGTYPE_p_SCIP_Event event) {
+    return SCIPJNIJNI.SCIPeventGetRowNewSideVal(SWIGTYPE_p_SCIP_Event.getCPtr(event));
   }
 
   public static SWIGTYPE_p_SCIP createSCIP() {

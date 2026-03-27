@@ -7,6 +7,7 @@
 %{
    #include "scip/scip.h"
    #include "scip/scipdefplugins.h"
+   #include "objscip/objeventhdlr.h"
    #include "objscip/objmessagehdlr.h"
 
    /* if libscip is a shared library, ensure we use function calls instead of
@@ -68,6 +69,74 @@
 
    #ifdef SCIPconsGetName
    #undef SCIPconsGetName
+   #endif
+
+   #ifdef SCIPeventGetType
+   #undef SCIPeventGetType
+   #endif
+
+   #ifdef SCIPeventGetOldobj
+   #undef SCIPeventGetOldobj
+   #endif
+
+   #ifdef SCIPeventGetNewobj
+   #undef SCIPeventGetNewobj
+   #endif
+
+   #ifdef SCIPeventGetOldbound
+   #undef SCIPeventGetOldbound
+   #endif
+
+   #ifdef SCIPeventGetNewbound
+   #undef SCIPeventGetNewbound
+   #endif
+
+   #ifdef SCIPeventGetOldtype
+   #undef SCIPeventGetOldtype
+   #endif
+
+   #ifdef SCIPeventGetNewtype
+   #undef SCIPeventGetNewtype
+   #endif
+
+   #ifdef SCIPeventGetNode
+   #undef SCIPeventGetNode
+   #endif
+
+   #ifdef SCIPeventGetSol
+   #undef SCIPeventGetSol
+   #endif
+
+   #ifdef SCIPeventGetRowCol
+   #undef SCIPeventGetRowCol
+   #endif
+
+   #ifdef SCIPeventGetRowOldCoefVal
+   #undef SCIPeventGetRowOldCoefVal
+   #endif
+
+   #ifdef SCIPeventGetRowNewCoefVal
+   #undef SCIPeventGetRowNewCoefVal
+   #endif
+
+   #ifdef SCIPeventGetRowOldConstVal
+   #undef SCIPeventGetRowOldConstVal
+   #endif
+
+   #ifdef SCIPeventGetRowNewConstVal
+   #undef SCIPeventGetRowNewConstVal
+   #endif
+
+   #ifdef SCIPeventGetRowSide
+   #undef SCIPeventGetRowSide
+   #endif
+
+   #ifdef SCIPeventGetRowOldSideVal
+   #undef SCIPeventGetRowOldSideVal
+   #endif
+
+   #ifdef SCIPeventGetRowNewSideVal
+   #undef SCIPeventGetRowNewSideVal
    #endif
    #endif /* ndef HAVE_STATIC_LIBSCIP */
 
@@ -603,6 +672,14 @@ enum SCIP_Vartype
 };
 typedef enum SCIP_Vartype SCIP_VARTYPE;
 
+/** SCIP_SideType enum */
+enum SCIP_SideType
+{
+   SCIP_SIDETYPE_LEFT  = 0,
+   SCIP_SIDETYPE_RIGHT = 1
+};
+typedef enum SCIP_SideType SCIP_SIDETYPE;
+
 /** SCIP_BoundType enum */
 enum SCIP_BoundType
 {
@@ -806,8 +883,49 @@ SCIP_RETCODE   SCIPgetDualSolVal(SCIP* scip, SCIP_CONS* cons, SCIP_Real* dualsol
 SCIP_Real      SCIPgetDualsolLinear(SCIP* scip, SCIP_CONS* cons);
 SCIP_Real      SCIPgetDualfarkasLinear(SCIP* scip, SCIP_CONS* cons);
 
+/* from type_tree.h */
+typedef struct SCIP_Node SCIP_NODE;
+
+/* from type_lp.h */
+typedef struct SCIP_Col SCIP_COL;
+typedef struct SCIP_Row SCIP_ROW;
+
+/* from type_event.h */
+typedef long long SCIP_EVENTTYPE;
+typedef struct SCIP_Eventhdlr SCIP_EVENTHDLR;
+typedef struct SCIP_EventhdlrData SCIP_EVENTHDLRDATA;
+typedef struct SCIP_Event SCIP_EVENT;
+typedef struct SCIP_EventData SCIP_EVENTDATA;
+
 /* from type_message.h */
 typedef struct SCIP_Messagehdlr SCIP_MESSAGEHDLR;
+
+/* from obj_event.h */
+namespace scip
+{
+class ObjEventhdlr
+{
+public:
+   SCIP* scip_;
+   char* scip_name_;
+   char* scip_desc_;
+
+   ObjEventhdlr(SCIP* scip, const char* name, const char* desc);
+   virtual ~ObjEventhdlr();
+   virtual SCIP_RETCODE scip_free(SCIP* scip, SCIP_EVENTHDLR* eventhdlr);
+   virtual SCIP_RETCODE scip_init(SCIP* scip, SCIP_EVENTHDLR* eventhdlr);
+   virtual SCIP_RETCODE scip_exit(SCIP* scip, SCIP_EVENTHDLR* eventhdlr);
+   virtual SCIP_RETCODE scip_initsol(SCIP* scip, SCIP_EVENTHDLR* eventhdlr);
+   virtual SCIP_RETCODE scip_exitsol(SCIP* scip, SCIP_EVENTHDLR* eventhdlr);
+   virtual SCIP_RETCODE scip_delete(SCIP* scip, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENTDATA** eventdata);
+   virtual SCIP_RETCODE scip_exec(SCIP* scip, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENT* event, SCIP_EVENTDATA* eventdata) = 0;
+};
+
+} /* namespace scip */
+
+SCIP_RETCODE   SCIPincludeObjEventhdlr(SCIP* scip, scip::ObjEventhdlr* objeventhdlr, SCIP_Bool deleteobject);
+scip::ObjEventhdlr* SCIPfindObjEventhdlr(SCIP* scip, const char* name);
+scip::ObjEventhdlr* SCIPgetObjEventhdlr(SCIP* scip, SCIP_EVENTHDLR* eventhdlr);
 
 /* from obj_message.h */
 namespace scip
@@ -837,6 +955,39 @@ SCIP_MESSAGEHDLR* SCIPgetMessagehdlr(SCIP* scip);
 void           SCIPsetMessagehdlrLogfile(SCIP* scip, const char* filename);
 void           SCIPsetMessagehdlrQuiet(SCIP* scip, SCIP_Bool quiet);
 SCIP_VERBLEVEL SCIPgetVerbLevel(SCIP* scip);
+
+/* from scip_event.h */
+SCIP_EVENTHDLR* SCIPfindEventhdlr(SCIP* scip, const char* name);
+SCIP_RETCODE   SCIPcatchEvent(SCIP* scip, SCIP_EVENTTYPE eventtype, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENTDATA* eventdata, int* filterpos);
+SCIP_RETCODE   SCIPdropEvent(SCIP* scip, SCIP_EVENTTYPE eventtype, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENTDATA* eventdata, int filterpos);
+SCIP_RETCODE   SCIPcatchVarEvent(SCIP* scip, SCIP_VAR* var, SCIP_EVENTTYPE eventtype, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENTDATA* eventdata, int* filterpos);
+SCIP_RETCODE   SCIPdropVarEvent(SCIP* scip, SCIP_VAR* var, SCIP_EVENTTYPE eventtype, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENTDATA* eventdata, int filterpos);
+SCIP_RETCODE   SCIPcatchRowEvent(SCIP* scip, SCIP_ROW* row, SCIP_EVENTTYPE eventtype, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENTDATA* eventdata, int* filterpos);
+SCIP_RETCODE   SCIPdropRowEvent(SCIP* scip, SCIP_ROW* row, SCIP_EVENTTYPE eventtype, SCIP_EVENTHDLR* eventhdlr, SCIP_EVENTDATA* eventdata, int filterpos);
+
+/* from pub_event.h */
+const char*    SCIPeventhdlrGetName(SCIP_EVENTHDLR* eventhdlr);
+SCIP_EVENTTYPE SCIPeventGetType(SCIP_EVENT* event);
+SCIP_VAR*      SCIPeventGetVar(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetOldobj(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetNewobj(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetOldbound(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetNewbound(SCIP_EVENT* event);
+SCIP_VARTYPE   SCIPeventGetOldtype(SCIP_EVENT* event);
+SCIP_VARTYPE   SCIPeventGetNewtype(SCIP_EVENT* event);
+SCIP_NODE*     SCIPeventGetNode(SCIP_EVENT* event);
+SCIP_SOL*      SCIPeventGetSol(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetHoleLeft(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetHoleRight(SCIP_EVENT* event);
+SCIP_ROW*      SCIPeventGetRow(SCIP_EVENT* event);
+SCIP_COL*      SCIPeventGetRowCol(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetRowOldCoefVal(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetRowNewCoefVal(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetRowOldConstVal(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetRowNewConstVal(SCIP_EVENT* event);
+SCIP_SIDETYPE  SCIPeventGetRowSide(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetRowOldSideVal(SCIP_EVENT* event);
+SCIP_Real      SCIPeventGetRowNewSideVal(SCIP_EVENT* event);
 
 /* assist functions */
 SCIP*          createSCIP();
