@@ -14,4 +14,34 @@ public final class Row
    {
       return _rowptr;
    }
+
+   public String getName()
+   {
+      assert(_rowptr != null);
+      return SCIPJNI.SCIProwGetName(_rowptr);
+   }
+
+   public int getIndex()
+   {
+      assert(_rowptr != null);
+      return SCIPJNI.SCIProwGetIndex(_rowptr);
+   }
+
+   public double getLhs()
+   {
+      assert(_rowptr != null);
+      return SCIPJNI.SCIProwGetLhs(_rowptr);
+   }
+
+   public double getRhs()
+   {
+      assert(_rowptr != null);
+      return SCIPJNI.SCIProwGetRhs(_rowptr);
+   }
+
+   @Override
+   public String toString()
+   {
+      return getName() + "#" + getIndex() + " [" + getLhs() + "," + getRhs() + "]";
+   }
 }

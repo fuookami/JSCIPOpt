@@ -1,17 +1,22 @@
 package jscip;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 
 /** Class representing a single SCIP instance (equivalent of SCIP).*/
 public class Scip
 {
    private SWIGTYPE_p_SCIP _scipptr; /** pointer address class created by SWIG */
    private final ArrayList<EventHandler> _eventhandlers; /** keep Java event handlers alive while SCIP owns the director */
+   private final IdentityHashMap<Variable, SWIGTYPE_p_SCIP_VAR> _eventvars; /** cache transformed vars used for event registration */
+   private final HashMap<Long, Integer> _eventrows; /** reference counts for rows kept alive for row events */
 
    /* helper function to check a SCIP retcode */
    private static void CHECK_RETCODE(SCIP_Retcode retcode)
    {
-      assert(retcode == SCIP_Retcode.SCIP_OKAY);
+      if( retcode != SCIP_Retcode.SCIP_OKAY )
+         throw new IllegalStateException("SCIP call failed with retcode " + retcode);
    }
 
    /** default constructor */
@@ -19,6 +24,8 @@ public class Scip
    {
       _scipptr = null;
       _eventhandlers = new ArrayList<>();
+      _eventvars = new IdentityHashMap<>();
+      _eventrows = new HashMap<>();
    }
 
    /** returns SWIG object type representing a SCIP pointer */
@@ -42,6 +49,8 @@ public class Scip
       assert(_scipptr != null);
       SCIPJNI.freeSCIP(_scipptr);
       _eventhandlers.clear();
+      _eventvars.clear();
+      _eventrows.clear();
       _scipptr = null;
    }
 
@@ -277,6 +286,47 @@ public class Scip
       var.setPtr(null);
    }
 
+   /** wraps SCIPgetTransformedVar() */
+   public Variable getTransformedVar(Variable var)
+   {
+      if( _scipptr == null )
+         throw new IllegalStateException("SCIP instance is not initialized");
+      if( var == null || var.getPtr() == null )
+         throw new IllegalArgumentException("Variable is null or has already been released");
+
+      SWIGTYPE_p_p_SCIP_VAR transvarptr = SCIPJNI.new_SCIP_VAR_array(1);
+
+      try
+      {
+         CHECK_RETCODE( SCIPJNI.SCIPgetTransformedVar(_scipptr, var.getPtr(), transvarptr) );
+
+         SWIGTYPE_p_SCIP_VAR ptr = SCIPJNI.SCIP_VAR_array_getitem(transvarptr, 0);
+         return (ptr == null) ? null : new Variable(ptr);
+      }
+      finally
+      {
+         SCIPJNI.delete_SCIP_VAR_array(transvarptr);
+      }
+   }
+
+   private Variable getEventVar(Variable var)
+   {
+      if( var == null )
+         throw new IllegalArgumentException("Variable is null");
+
+      SWIGTYPE_p_SCIP_VAR cachedptr = _eventvars.get(var);
+      if( cachedptr != null )
+         return new Variable(cachedptr);
+
+      Variable eventvar = getTransformedVar(var);
+
+      if( eventvar == null || eventvar.getPtr() == null )
+         throw new IllegalStateException("No transformed variable available for event registration: " + var.getName());
+
+      _eventvars.put(var, eventvar.getPtr());
+      return eventvar;
+   }
+
    /** wraps SCIPgetNVars() */
    public int getNVars()
    {
@@ -301,6 +351,102 @@ public class Scip
    public int getNOrigVars()
    {
       return SCIPJNI.SCIPgetNOrigVars(_scipptr);
+   }
+
+   /** wraps SCIPgetNLPRows() */
+   public int getNLPRows()
+   {
+      return SCIPJNI.SCIPgetNLPRows(_scipptr);
+   }
+
+   /** wraps the current LP row array */
+   public Row[] getLPRows()
+   {
+      int nrows = getNLPRows();
+      Row[] rows = new Row[nrows];
+
+      for( int i = 0; i < nrows; ++i )
+         rows[i] = new Row(SCIPJNI.getLPRow(_scipptr, i));
+
+      return rows;
+   }
+
+   /** wraps access to one current LP row by position */
+   public Row getLPRow(int rowpos)
+   {
+      if( rowpos < 0 || rowpos >= getNLPRows() )
+         throw new IndexOutOfBoundsException("LP row index out of range: " + rowpos);
+
+      SWIGTYPE_p_SCIP_Row ptr = SCIPJNI.getLPRow(_scipptr, rowpos);
+      return (ptr == null) ? null : new Row(ptr);
+   }
+
+   /** wraps SCIPcaptureRow() */
+   public void captureRow(Row row)
+   {
+      assert(row != null && row.getPtr() != null);
+      CHECK_RETCODE( SCIPJNI.SCIPcaptureRow(_scipptr, row.getPtr()) );
+   }
+
+   /** wraps SCIPreleaseRow() */
+   public void releaseRow(Row row)
+   {
+      assert(row != null && row.getPtr() != null);
+      SCIPJNI.releaseRow(_scipptr, row.getPtr());
+   }
+
+   private void retainRowEventRef(Row row)
+   {
+      long rowptr = SWIGTYPE_p_SCIP_Row.getCPtr(row.getPtr());
+      Integer count = _eventrows.get(rowptr);
+
+      if( count == null )
+      {
+         captureRow(row);
+         _eventrows.put(rowptr, 1);
+      }
+      else
+         _eventrows.put(rowptr, count + 1);
+   }
+
+   private void releaseRowEventRef(Row row)
+   {
+      long rowptr = SWIGTYPE_p_SCIP_Row.getCPtr(row.getPtr());
+      Integer count = _eventrows.get(rowptr);
+
+      if( count == null )
+         return;
+
+      if( count <= 1 )
+      {
+         releaseRow(row);
+         _eventrows.remove(rowptr);
+      }
+      else
+         _eventrows.put(rowptr, count - 1);
+   }
+
+   /** wraps SCIPgetTransformedCons() */
+   public Constraint getTransformedCons(Constraint cons)
+   {
+      if( _scipptr == null )
+         throw new IllegalStateException("SCIP instance is not initialized");
+      if( cons == null || cons.getPtr() == null )
+         throw new IllegalArgumentException("Constraint is null or has already been released");
+
+      SWIGTYPE_p_p_SCIP_CONS transconsptr = SCIPJNI.new_SCIP_CONS_array(1);
+
+      try
+      {
+         CHECK_RETCODE( SCIPJNI.SCIPgetTransformedCons(_scipptr, cons.getPtr(), transconsptr) );
+
+         SWIGTYPE_p_SCIP_CONS ptr = SCIPJNI.SCIP_CONS_array_getitem(transconsptr, 0);
+         return (ptr == null) ? null : new Constraint(ptr);
+      }
+      finally
+      {
+         SCIPJNI.delete_SCIP_CONS_array(transconsptr);
+      }
    }
 
    /** wraps SCIPgetOrigVars() */
@@ -1465,6 +1611,32 @@ public class Scip
       cons.setPtr(null);
    }
 
+   /** wraps SCIPgetRowLinear(); may return null if no LP row exists yet */
+   public Row getRowLinear(Constraint cons)
+   {
+      assert(cons != null && cons.getPtr() != null);
+      Constraint transcons = getTransformedCons(cons);
+      if( transcons == null || transcons.getPtr() == null )
+         return null;
+
+      SWIGTYPE_p_SCIP_Row ptr = SCIPJNI.SCIPgetRowLinear(_scipptr, transcons.getPtr());
+      return (ptr == null) ? null : new Row(ptr);
+   }
+
+   /** wraps SCIPchgRowLhs() */
+   public void changeRowLhs(Row row, double lhs)
+   {
+      assert(row != null && row.getPtr() != null);
+      CHECK_RETCODE( SCIPJNI.SCIPchgRowLhs(_scipptr, row.getPtr(), lhs) );
+   }
+
+   /** wraps SCIPchgRowRhs() */
+   public void changeRowRhs(Row row, double rhs)
+   {
+      assert(row != null && row.getPtr() != null);
+      CHECK_RETCODE( SCIPJNI.SCIPchgRowRhs(_scipptr, row.getPtr(), rhs) );
+   }
+
    /** wraps SCIPgetNSols() */
    public int getNSols()
    {
@@ -1829,8 +2001,9 @@ public class Scip
    public int catchVarEvent(Variable var, long eventtype, EventHandler handler) {
       assert(var != null && var.getPtr() != null);
       assert(handler != null && handler.getRef() != null);
+      Variable eventvar = getEventVar(var);
       SWIGTYPE_p_int filterpos = SCIPJNI.new_int_array(1);
-      CHECK_RETCODE( SCIPJNI.SCIPcatchVarEvent(_scipptr, var.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
+      CHECK_RETCODE( SCIPJNI.SCIPcatchVarEvent(_scipptr, eventvar.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
       int pos = SCIPJNI.int_array_getitem(filterpos, 0);
       SCIPJNI.delete_int_array(filterpos);
       return pos;
@@ -1838,20 +2011,33 @@ public class Scip
 
    /** wraps SCIPdropVarEvent() */
    public void dropVarEvent(Variable var, long eventtype, EventHandler handler, int filterpos) {
-      assert(var != null && var.getPtr() != null);
+      assert(var != null);
       assert(handler != null && handler.getRef() != null);
-      CHECK_RETCODE( SCIPJNI.SCIPdropVarEvent(_scipptr, var.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
+      Variable eventvar = getEventVar(var);
+      CHECK_RETCODE( SCIPJNI.SCIPdropVarEvent(_scipptr, eventvar.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
    }
 
    /** wraps SCIPcatchRowEvent() and returns the filter position */
    public int catchRowEvent(Row row, long eventtype, EventHandler handler) {
       assert(row != null && row.getPtr() != null);
       assert(handler != null && handler.getRef() != null);
+      retainRowEventRef(row);
       SWIGTYPE_p_int filterpos = SCIPJNI.new_int_array(1);
-      CHECK_RETCODE( SCIPJNI.SCIPcatchRowEvent(_scipptr, row.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
-      int pos = SCIPJNI.int_array_getitem(filterpos, 0);
-      SCIPJNI.delete_int_array(filterpos);
-      return pos;
+      try
+      {
+         CHECK_RETCODE( SCIPJNI.SCIPcatchRowEvent(_scipptr, row.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
+         int pos = SCIPJNI.int_array_getitem(filterpos, 0);
+         return pos;
+      }
+      catch (RuntimeException e)
+      {
+         releaseRowEventRef(row);
+         throw e;
+      }
+      finally
+      {
+         SCIPJNI.delete_int_array(filterpos);
+      }
    }
 
    /** wraps SCIPdropRowEvent() */
@@ -1859,6 +2045,7 @@ public class Scip
       assert(row != null && row.getPtr() != null);
       assert(handler != null && handler.getRef() != null);
       CHECK_RETCODE( SCIPJNI.SCIPdropRowEvent(_scipptr, row.getPtr(), eventtype, EventHandler.getPtr(handler), null, filterpos) );
+      releaseRowEventRef(row);
    }
 
    /** wraps SCIPsetStaticErrorPrintingMessagehdlr() */
