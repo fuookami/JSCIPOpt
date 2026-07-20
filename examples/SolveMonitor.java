@@ -1,7 +1,7 @@
 import jscip.*;
 
 /** Example how to monitor solve progress from Java events. */
-public class SolveMonitorDemo
+public class SolveMonitor
 {
    private static String eventLabel(long eventType)
    {
@@ -69,21 +69,16 @@ public class SolveMonitorDemo
       scip.releaseCons(c2);
       scip.releaseCons(c1);
 
-      scip.includeEventHandler("solve-monitor", "prints key solve state values", new EventHandler() {
+      new EventHandler(scip, "solve-monitor", "prints key solve state values",
+            EventMask.LP_EVENT | EventMask.NODE_EVENT | EventMask.SOL_EVENT) {
          private int counter = 0;
          private String lastSnapshot = null;
 
          @Override
-         public long getType()
-         {
-            return EventMask.LP_EVENT | EventMask.NODE_EVENT | EventMask.SOL_EVENT;
-         }
-
-         @Override
-         public void execute(Scip model, EventHandlerRef self, Event event)
+         protected void execute(Event event)
          {
             counter++;
-            String payload = snapshot(eventLabel(event.getType()), model);
+            String payload = snapshot(eventLabel(event.getType()), scip);
 
             if( payload.equals(lastSnapshot) )
                return;
@@ -91,7 +86,7 @@ public class SolveMonitorDemo
             lastSnapshot = payload;
             System.out.println("event[" + counter + "] " + payload);
          }
-      });
+      }.include();
 
       scip.solve();
       System.out.println("final " + snapshot("FINAL", scip));

@@ -1,7 +1,7 @@
 import jscip.*;
 
 /** Example how to register a Java event handler. */
-public class EventDemo
+public class Eventhdlr
 {
    public static void main(String[] args)
    {
@@ -20,22 +20,22 @@ public class EventDemo
       scip.releaseCons(c2);
       scip.releaseCons(c1);
 
-      scip.includeEventHandler("count-events", "prints lp, node, and solution events", new EventHandler() {
+      EventHandler handler = new EventHandler(scip, "count-events", "prints lp, node, and solution events",
+            EventMask.LP_EVENT | EventMask.NODE_EVENT | EventMask.SOL_EVENT) {
          private int counter = 0;
 
          @Override
-         public long getType()
-         {
-            return EventMask.LP_EVENT | EventMask.NODE_EVENT | EventMask.SOL_EVENT;
-         }
-
-         @Override
-         public void execute(Scip model, EventHandlerRef eventhdlr, Event event)
+         protected void execute(Event event)
          {
             counter++;
-            System.out.println("event[" + counter + "] from " + eventhdlr.getName() + " type=" + event.getType());
+            System.out.println("event[" + counter + "] from " + getName() + " type=" + event.getType());
          }
-      });
+      };
+      handler.include();
+
+      EventHandler included = scip.findEventHandler("count-events");
+      if( included == null || !included.getName().equals(handler.getName()) )
+         throw new IllegalStateException("included event handler was not found");
 
       scip.solve();
 

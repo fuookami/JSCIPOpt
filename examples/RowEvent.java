@@ -1,7 +1,7 @@
 import jscip.*;
 
 /** Example how to inspect LP rows from Java once the first LP was solved. */
-public class RowDemo
+public class RowEvent
 {
    public static void main(String[] args)
    {
@@ -20,29 +20,24 @@ public class RowDemo
       scip.addCons(c1);
       scip.addCons(c2);
 
-      scip.includeEventHandler("inspect-rows", "prints LP rows after the first LP solve", new EventHandler() {
+      new EventHandler(scip, "inspect-rows", "prints LP rows after the first LP solve",
+            EventMask.FIRST_LP_SOLVED) {
          private boolean printed = false;
 
          @Override
-         public long getType()
-         {
-            return EventMask.FIRST_LP_SOLVED;
-         }
-
-         @Override
-         public void execute(Scip model, EventHandlerRef eventhdlr, Event event)
+         protected void execute(Event event)
          {
             if( printed )
                return;
 
             printed = true;
 
-            Row[] rows = model.getLPRows();
-            System.out.println(eventhdlr.getName() + ": lp rows=" + rows.length);
+            Row[] rows = scip.getLPRows();
+            System.out.println(getName() + ": lp rows=" + rows.length);
             for( Row row : rows )
                System.out.println("row " + row.getIndex() + ": " + row.getName());
          }
-      });
+      }.include();
 
       scip.solve();
 

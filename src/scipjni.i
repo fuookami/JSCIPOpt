@@ -138,6 +138,30 @@
    #ifdef SCIPeventGetRowNewSideVal
    #undef SCIPeventGetRowNewSideVal
    #endif
+
+   #ifdef SCIProwGetName
+   #undef SCIProwGetName
+   #endif
+
+   #ifdef SCIProwGetIndex
+   #undef SCIProwGetIndex
+   #endif
+
+   #ifdef SCIProwGetLhs
+   #undef SCIProwGetLhs
+   #endif
+
+   #ifdef SCIProwGetRhs
+   #undef SCIProwGetRhs
+   #endif
+
+   #ifdef SCIPcolGetVar
+   #undef SCIPcolGetVar
+   #endif
+
+   #ifdef SCIPcolGetIndex
+   #undef SCIPcolGetIndex
+   #endif
    #endif /* ndef HAVE_STATIC_LIBSCIP */
 
    /* assist function to create a SCIP */
@@ -169,6 +193,18 @@
    void releaseVar(SCIP* scip, SCIP_VAR* var)
    {
       SCIP_CALL_ABORT( SCIPreleaseVar(scip, &var) );
+   }
+
+   /* assist function to get one LP row */
+   SCIP_ROW* getLPRow(SCIP* scip, int rowpos)
+   {
+      return SCIPgetLPRows(scip)[rowpos];
+   }
+
+   /* assist function to release an LP row */
+   void releaseRow(SCIP* scip, SCIP_ROW* row)
+   {
+      SCIP_CALL_ABORT( SCIPreleaseRow(scip, &row) );
    }
 
    /* assist function to create an abs expression */
@@ -844,6 +880,11 @@ SCIP_RETCODE   SCIPchgVarObj(SCIP* scip, SCIP_VAR* var, SCIP_Real obj);
 
 /* from scip_var.h */
 SCIP_RETCODE   SCIPchgVarBranchPriority(SCIP* scip, SCIP_VAR* var, int branchpriority);
+SCIP_RETCODE   SCIPcaptureVar(SCIP* scip, SCIP_VAR* var);
+SCIP_RETCODE   SCIPgetTransformedVar(SCIP* scip, SCIP_VAR* var, SCIP_VAR** transvar);
+
+/* from scip_cons.h */
+SCIP_RETCODE   SCIPgetTransformedCons(SCIP* scip, SCIP_CONS* cons, SCIP_CONS** transcons);
 
 /* from scip_sol.h */
 SCIP_RETCODE   SCIPcreateSol(SCIP* scip, SCIP_SOL** sol, SCIP_HEUR* heur);
@@ -889,6 +930,23 @@ typedef struct SCIP_Node SCIP_NODE;
 /* from type_lp.h */
 typedef struct SCIP_Col SCIP_COL;
 typedef struct SCIP_Row SCIP_ROW;
+
+/* from cons_linear.h */
+SCIP_ROW*      SCIPgetRowLinear(SCIP* scip, SCIP_CONS* cons);
+
+/* from scip_lp.h */
+int            SCIPgetNLPRows(SCIP* scip);
+SCIP_RETCODE   SCIPcaptureRow(SCIP* scip, SCIP_ROW* row);
+SCIP_RETCODE   SCIPchgRowLhs(SCIP* scip, SCIP_ROW* row, SCIP_Real lhs);
+SCIP_RETCODE   SCIPchgRowRhs(SCIP* scip, SCIP_ROW* row, SCIP_Real rhs);
+
+/* from pub_lp.h */
+const char*    SCIProwGetName(SCIP_ROW* row);
+int            SCIProwGetIndex(SCIP_ROW* row);
+SCIP_Real      SCIProwGetLhs(SCIP_ROW* row);
+SCIP_Real      SCIProwGetRhs(SCIP_ROW* row);
+SCIP_VAR*      SCIPcolGetVar(SCIP_COL* col);
+int            SCIPcolGetIndex(SCIP_COL* col);
 
 /* from type_event.h */
 typedef long long SCIP_EVENTTYPE;
@@ -994,6 +1052,8 @@ SCIP*          createSCIP();
 void           freeSCIP(SCIP* scip);
 SCIP_VAR*      createVar(SCIP* scip, const char* name, SCIP_Real lb, SCIP_Real ub, SCIP_Real obj, SCIP_VARTYPE vartype);
 void           releaseVar(SCIP* scip, SCIP_VAR* var);
+SCIP_ROW*      getLPRow(SCIP* scip, int rowpos);
+void           releaseRow(SCIP* scip, SCIP_ROW* row);
 SCIP_EXPR*     createExprAbs(SCIP* scip, SCIP_EXPR* child);
 SCIP_EXPR*     createExprEntropy(SCIP* scip, SCIP_EXPR* child);
 SCIP_EXPR*     createExprExp(SCIP* scip, SCIP_EXPR* child);

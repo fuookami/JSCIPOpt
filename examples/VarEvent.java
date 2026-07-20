@@ -1,7 +1,7 @@
 import jscip.*;
 
 /** Example how to register variable events manually from Java. */
-public class VarEventDemo
+public class VarEvent
 {
    public static void main(String[] args)
    {
@@ -20,37 +20,31 @@ public class VarEventDemo
       scip.releaseCons(c2);
       scip.releaseCons(c1);
 
-      scip.includeEventHandler("watch-x-bounds", "prints bound changes for x", new EventHandler() {
+      new EventHandler(scip, "watch-x-bounds", "prints bound changes for x") {
          private int filterPos = -1;
 
          @Override
-         public long getType()
+         protected void init()
          {
-            return EventMask.DISABLED;
+            filterPos = scip.catchVarEvent(x, EventMask.BOUND_CHANGED, this);
          }
 
          @Override
-         public void init(Scip model, EventHandlerRef self)
-         {
-            filterPos = model.catchVarEvent(x, EventMask.BOUND_CHANGED, this);
-         }
-
-         @Override
-         public void exit(Scip model, EventHandlerRef self)
+         protected void exit()
          {
             if( filterPos >= 0 )
-               model.dropVarEvent(x, EventMask.BOUND_CHANGED, this, filterPos);
+               scip.dropVarEvent(x, EventMask.BOUND_CHANGED, this, filterPos);
          }
 
          @Override
-         public void execute(Scip model, EventHandlerRef self, Event event)
+         protected void execute(Event event)
          {
             Variable eventVar = event.getVar();
-            System.out.println(self.getName() + ": "
+            System.out.println(getName() + ": "
                   + (eventVar == null ? "<null>" : eventVar.getName())
                   + " " + event.getOldBound() + " -> " + event.getNewBound());
          }
-      });
+      }.include();
 
       scip.solve();
 

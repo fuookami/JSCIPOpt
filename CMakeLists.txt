@@ -72,7 +72,6 @@ set(JAVA_SOURCES
   ${PROJECT_SOURCE_DIR}/java/jscip/Column.java
   ${PROJECT_SOURCE_DIR}/java/jscip/Event.java
   ${PROJECT_SOURCE_DIR}/java/jscip/EventHandler.java
-  ${PROJECT_SOURCE_DIR}/java/jscip/EventHandlerRef.java
   ${PROJECT_SOURCE_DIR}/java/jscip/EventMask.java
   ${PROJECT_SOURCE_DIR}/java/jscip/Scip.java
   ${PROJECT_SOURCE_DIR}/java/jscip/Node.java
